@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice PDF Download</title>
+
+    <!-- jsPDF & html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            text-align: center;
+        }
+
+        .invoice-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: left;
+        }
+
+        .header {
+            padding: 20px;
+            background-color: #f1f1f1;
+            text-align: center;
+            position: relative;
+        }
+
+        .header img {
+            max-width: 200px;
+            background-color: #ffffff;
+            /* Set background only behind the logo */
+            padding: 10px;
+            /* Adds space around the logo */
+            border-radius: 5px;
+        }
+
+        .header h3 {
+            margin: 10px 0 0;
+            font-size: 18px;
+            color: #365fab;
+        }
+
+        .content {
+            padding: 20px;
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #ddd;
+            text-align: left;
+            padding: 10px;
+        }
+
+        table th {
+            background-color: #365fab;
+            color: white;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        .footer {
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .buttons {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .buttons button {
+            background-color: #365fab;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+
+        .buttons button:hover {
+            background-color: #2a4d87;
+        }
+
+        /* Flexbox to display bank details and terms & conditions horizontally */
+        .info-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .info-block {
+            width: 48%;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        /* Adjust spacing between blocks */
+        .info-block+.info-block {
+            padding-left: 10px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 20px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #2c3e50;
+            color: #2c3e50;
+        }
+
+        /* QR Code styling */
+        .qr-code {
+            width: 120px;
+            height: 120px;
+            margin-top: 10px;
+        }
+
+
+        /* Adjust QR code to be horizontally aligned with the content */
+        .info-section .qr-block {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 48%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="invoice" class="invoice-container">
+        <div class="header">
+            <img src="https://imitoolsindia.com/images/logo.png" alt="Company Logo">
+            <h3>Proforma Invoice</h3>
+        </div>
+
+        <div class="content">
+            <p><strong>For:&nbsp; </strong>{{customer_name}}<br>
+                <strong>Order No:&nbsp; </strong>{{order_number}}<br>
+                <strong>Order Status:&nbsp; </strong>{{status}}<br>
+                <strong>Date:&nbsp; </strong>{{order_date}}<br>
+                <strong>Delivery Estimate:&nbsp </strong>{{delivery_estimate}}
+            </p>
+
+            <!-- New Table with headers you provided -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Catalog Number</th>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Price/Unit</th>
+                        <th>Taxable Amount</th>
+                        <th>Discounted Amount</th>
+                        <th>IGST 18%</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{table_rows}} <!-- Add dynamic rows here -->
+                </tbody>
+            </table>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <td colspan="6">Sub Total</td>
+                        <td colspan="2">{{sub_total}}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">Freight Charges</td>
+                        <td colspan="2">{{freight}}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="6">Total</td>
+                        <td colspan="2">Rs. {{final_price}}</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="6">Total Amount Saved</td>
+                        <td colspan="2">Rs. {{amount_saved}}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Courier Company</th>
+                        <th>Docket Number</th>
+                        <th>Tracking Link</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{courier_company}}</td>
+                        <td>{{docket_number}}</td>
+                        <td><a href="https://shreenandancourier.com/track-shipment/{{docket_number}}"
+                                target="_blank">{{docket_number}}</a></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- <p><strong>Your Courier Docket Number is</strong> - <a href="https://shreenandancourier.com/track-shipment/{{docket_number}}" target="_blank">{{docket_number}}</a></p> -->
+
+            <!-- Bank Details and Terms & Conditions Sections in Parallel -->
+            <div class="info-section">
+                <!-- Bank Details Section -->
+                <div class="info-block">
+                    <div class="section-title">Bank & Payment Details</div>
+                    <p><strong>Bank Details</strong><br>
+                        Account No.: 32310525383<br>
+                        IFSC Code: SBINQ060400<br>
+                        Account Holder's Name: INDMECH INDUSTRIAL CORPORATION</p>
+                    <!-- QR Code Section -->
+                    <div class="qr-block">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/QR_Code_Example.svg/1200px-QR_Code_Example.svg.png"
+                            alt="QR Code" class="qr-code">
+                    </div>
+                </div>
+
+                <!-- Terms and Conditions Section -->
+                <div class="info-block">
+                    <div class="section-title">Terms & Conditions</div>
+                    <p><strong>Payment:</strong> 100% Against Proforma Invoice payment by NEFT<br>
+                        <strong>Notes:</strong> Please arrange to Transfer payment by NEFT of Rs. 10200/- against this
+                        Proforma Invoice, then we will dispatch the Material.<br>
+                        <strong>Despatch:</strong> Shree Anjani Courier Services (P) Ltd.<br>
+                        <strong>Freight:</strong> PAID Door Delivery By Surface<br>
+                        <strong>F.O.R.:</strong> Plot No. 447, Phase II, Dediyasan G.I.D.C., Mehsana - 384002
+                    </p>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>&copy; 2025 INDMECH Pvt. Ltd. All rights reserved.</p>
+            </div>
+        </div>
+
+</body>
+
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Categories</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Font Awesome CDN -->
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .navbar {
+            height: 60px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: black;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .icon-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            /* Space between the back and toggle buttons */
+        }
+
+        .toggle-btn,
+        .back-btn {
+            background: none;
+            border: none;
+            color: black;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .toggle-btn:focus,
+        .back-btn:focus {
+            outline: none;
+        }
+
+        .search-bar {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            margin: 0 20px;
+        }
+
+        .search-bar input {
+            width: 30%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            height: calc(100% - 60px);
+            background-color: #555;
+            overflow-y: auto;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            transition: left 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.hidden {
+            left: -250px;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Catalog Header */
+        .catalog-header {
+            background-color: #333333;
+            /* Gray background */
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        /* Category Heading Style */
+        .sidebar ul>li {
+            padding: 10px;
+            cursor: pointer;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            /* This ensures the subheadings stack vertically */
+            justify-content: flex-start;
+            background-color: #555;
+            /* Background color for category */
+            margin: 5px 0;
+            position: relative;
+        }
+
+        /* Background color for the small square */
+        .category-heading {
+            display: flex;
+            align-items: center;
+        }
+
+        .category-heading span {
+            width: 20px;
+            height: 25px;
+            background-color: #ff5733;
+            /* Default color, will be overwritten by random color */
+            margin-right: 10px;
+        }
+
+        /* Subheading Style */
+        .sidebar ul ul {
+            display: none;
+            flex-direction: column;
+            padding-left: 20px;
+        }
+
+        /* Show subheadings when toggled */
+        .sidebar ul>li.active>ul {
+            display: block;
+        }
+
+        .sidebar ul ul>li {
+            padding: 5px 10px;
+            color: #fff;
+        }
+
+        .sidebar ul ul>li:hover {
+            background-color: #888;
+            /* Hover effect for subheadings */
+        }
+
+        .sidebar ul>li:hover {
+            background-color: #444;
+            /* Hover effect for category headings */
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 250px;
+            /* Sidebar is open by default */
+            margin-top: 60px;
+            transition: margin-left 0.3s;
+            overflow: auto;
+        }
+
+        .main-content.full-width {
+            margin-left: 0;
+            /* Expand content when sidebar is hidden */
+        }
+
+        .table-container {
+            margin-top: 20px;
+            overflow-x: auto;
+            display: none;
+            /* Hidden by default */
+            width: 100%;
+        }
+
+        .products-table {
+            width: 100%;
+            /* Full width */
+            border-collapse: collapse;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .products-table th,
+        .products-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .products-table th {
+            background-color: #555;
+            color: white;
+            position: sticky;
+            top: 0;
+        }
+
+        .products-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .products-table tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .products-table tr.highlight {
+            background-color: #ffffcc !important;
+        }
+
+        .no-match-message {
+            text-align: center;
+            color: red;
+            font-size: 20px;
+            padding: 20px;
+            display: none;
+            /* Hide by default */
+        }
+
+        /* Heading style */
+        #category-heading {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .category-heading span {
+            width: 20px;
+            height: 30px; /* Make the height the same as the width for a perfect square */
+            background-color: #ff5733; /* Default color */
+            margin-right: 10px;
+            display: inline-block; /* Ensure it's treated as a block-like element */
+            flex-shrink: 0; /* Prevent resizing */
+          }
+    </style>
+</head>
+
+<body>
+    <div class="navbar">
+        <div class="icon-group">
+            <button class="back-btn" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Search by category, subcategory, catalog, or product type..."
+                id="search-bar" oninput="searchTable()">
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="catalog-header">PRODUCTS CATALOG</div>
+        <ul>
+            {% for heading in catalog_headings %}
+            <li onclick="toggleSubcategories(this)">
+                <div class="category-heading">
+                    <span></span> <!-- Square for background color -->
+                    {{ heading.name }}
+                </div>
+                <ul>
+                    {% for subheading in heading.subheadings.all %}
+                    <li onclick="showProducts('{{ subheading.name }}', event)">
+                        {{ subheading.name }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="main-content" id="content">
+        <div class="no-match-message" id="no-match-message">No matching results found.</div>
+        <div id="category-heading"></div>
+        <div id="product-list" class="table-container">
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Product Type</th>
+                        <th>Catalog Number</th>
+                        <th>Description</th>
+                        <th>Warranty</th>
+                        <th>In Stock</th>
+                        <th>Price</th>
+                        <th>Add to Cart</th>
+                    </tr>
+                </thead>
+                <tbody id="product-table-body">
+                    {% for product in products %}
+                    <tr data-subheading="{{ product.catalog_subheading.name }}"
+                        data-catalog="{{ product.catalog_number }}" data-product-type="{{ product.product_type }}">
+                        <td>{{ product.product_type }}</td>
+                        <td>{{ product.catalog_number }}</td>
+                        <td>{{ product.description }}</td>
+                        <td>{{ product.warranty }}</td>
+                        <td>{{ product.in_stock }}</td>
+                        <td>Rs. {{ product.original_price }}</td>
+                        <td><a href="{% url 'add_to_cart' product.id %}" class="add-to-cart-btn">Add to Cart</a>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const categoryColors = [
+            '#9dab82', //BTHOLDER
+            '#beb7a4', // PTI TAPER HOLDER
+            '#3c638b', // KTI TAPER HOLDER
+            '#8d6b89', // HSK TAPER HOLDER
+            '#817265', // BTP FACE CONTACT HOLDERS
+            '#a37990', // SKP FACE CONTACT HOLDER
+            '#5b75b5', // SK HOLDER
+            '#968562', // CATP FACE CONTACT HOLDER
+            '#71a6af', // CAT TAPER HOLDERS
+            '#477471', // NON REVERSIBLE TAPPING ATTACHMENT
+            '#697b76', // UNIVERSAL QUICK CHANGE DRILLING
+            '#ad4536', // FLOATING REAMER HOLDER
+            '#966763', // ADJUSTABLE ADAPTORS TRAPEZOIDAL SHANK
+        ];
+
+        function applyCategoryColors() {
+            const categoryHeadings = document.querySelectorAll('.category-heading span');
+            
+            categoryHeadings.forEach((heading, index) => {
+                const color = categoryColors[index % categoryColors.length];
+                heading.style.backgroundColor = color;
+            });
+        }
+
+        window.onload = applyCategoryColors;
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            sidebar.classList.toggle('hidden');
+            content.classList.toggle('full-width');
+        }
+
+        function toggleSubcategories(element) {
+            const subcategories = element.querySelector('ul');
+            subcategories.style.display = subcategories.style.display === 'block' ? 'none' : 'block';
+            element.classList.toggle('active');
+        }
+
+        function showProducts(subheadingName, event) {
+            event.stopPropagation();
+
+            const rows = document.querySelectorAll('#product-table-body tr');
+            let matchFound = false;
+
+            rows.forEach(row => {
+                if (row.getAttribute('data-subheading') === subheadingName) {
+                    row.style.display = '';
+                    matchFound = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+
+            const tableContainer = document.querySelector('.table-container');
+            const noMatchMessage = document.getElementById('no-match-message');
+            document.getElementById('category-heading').style.display = matchFound ? 'block' : 'none';
+
+            if (matchFound) {
+                tableContainer.style.display = 'block';
+                noMatchMessage.style.display = 'none';
+            } else {
+                tableContainer.style.display = 'none';
+                noMatchMessage.style.display = 'block';
+            }
+        }
+
+        function searchTable() {
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const rows = document.querySelectorAll('#product-table-body tr');
+            let matchFound = false;
+        
+            rows.forEach(row => {
+                const subheading = row.getAttribute('data-subheading').toLowerCase();
+                const catalog = row.getAttribute('data-catalog').toLowerCase();
+                const productType = row.getAttribute('data-product-type').toLowerCase();
+                const rowText = row.textContent.toLowerCase();
+        
+                if (searchTerm && (rowText.includes(searchTerm) || subheading.includes(searchTerm) || catalog.includes(searchTerm) || productType.includes(searchTerm))) {
+                    row.style.display = '';
+                    row.classList.add('highlight');
+                    matchFound = true;
+                } else {
+                    row.style.display = searchTerm ? 'none' : ''; // Reset display based on search term
+                    row.classList.remove('highlight'); // Remove highlight if search is empty or doesn't match
+                }
+            });
+        
+            const tableContainer = document.querySelector('.table-container');
+            const noMatchMessage = document.getElementById('no-match-message');
+            const categoryHeading = document.getElementById('category-heading');
+        
+            if (searchTerm === '') {
+                tableContainer.style.display = 'none';
+                noMatchMessage.style.display = 'none';
+                categoryHeading.style.display = 'none';
+            } else {
+                categoryHeading.style.display = matchFound ? 'block' : 'none';
+                tableContainer.style.display = matchFound ? 'block' : 'none';
+                noMatchMessage.style.display = matchFound ? 'none' : 'block';
+            }
+        }        
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+
+</html>

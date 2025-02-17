@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+
+        .email-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            color: #365fab;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header img {
+            max-width: 100%;
+            height: auto;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+
+        .content {
+            padding: 20px;
+            color: #333333;
+        }
+
+        .content p {
+            line-height: 1.6;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            table-layout: auto;
+            min-width: 600px;
+        }
+
+        table th,
+        table td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 10px;
+            word-break: break-word;
+        }
+
+        table th {
+            background-color: #365fab;
+            color: white;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: white;
+            background-color: #365fab;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .button:hover {
+            background-color: #2a4a89;
+        }
+
+        .footer {
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 10px;
+            font-size: 12px;
+            color: #666666;
+        }
+
+        .footer a {
+            color: #5499c7;
+            text-decoration: none;
+        }
+
+        .total-row {
+            font-weight: bold;
+            background-color: #f2f2f2;
+        }
+
+        @media screen and (max-width: 600px) {
+            .email-container {
+                width: 100%;
+                margin: 10px;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 15px;
+            }
+
+            .header img {
+                max-width: 80%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            .button {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://imitoolsindia.com/images/logo.png" alt="Company Logo">
+            <h2>Order Request Summary</h2>
+        </div>
+        <div class="content">
+            <p>Dear {{customer_name}},</p>
+            <p>Below are the details of the requested products and the <strong>Discount, GST & Delivery Estimate</strong> to be given in
+                the Order Confirmation E-Mail.</p>
+            <p>Status: <strong>{{order_status}}</strong></p>
+            
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order Date</th>
+                            <th>Order Request No.</th>
+                            <th>Catalog Number</th>
+                            <th>Description</th>
+                            <th>Quantity</th>
+                            <th>Price/Unit</th>
+                            <th>Taxable Amount</th>
+                            <th>Discount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{table_rows}}
+                        <tr class="total-row">
+                            <td colspan="6">Total Price</td>
+                            <td>{{total_price}}</td>
+                            <td colspan="1"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Thank you for choosing our services!</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2025 INDMECH Pvt. Ltd. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+
+</html>

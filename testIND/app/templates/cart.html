@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #d3d3d3;
+            display: flex;
+            height: 100vh;
+        }
+
+        .navbar {
+            height: 60px;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: black;
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar img {
+            height: 50px;
+            /* Logo size */
+            max-height: 100%;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: black;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .toggle-btn:focus {
+            outline: none;
+        }
+
+        /* Profile Icon */
+        .profile-menu {
+            position: relative;
+            margin-right: 20px;
+        }
+
+        .profile-icon {
+            font-size: 30px;
+            cursor: pointer;
+            color: black;
+            transition: transform 0.3s, color 0.3s;
+        }
+
+        .profile-icon:hover {
+            color: #007bff;
+            /* Highlight color */
+            transform: scale(1.2);
+            /* Slight zoom effect */
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            min-width: 150px;
+        }
+
+        .dropdown-menu a {
+            display: block;
+            text-decoration: none;
+            color: black;
+            padding: 10px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .dropdown-menu a:hover {
+            background-color: #f0f0f0;
+        }
+
+        .dropdown-menu.visible {
+            display: block;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            height: calc(100% - 60px);
+            background-color: #555;
+            overflow-x: hidden;
+            position: fixed;
+            top: 60px;
+            left: -250px;
+            transition: left 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar.visible {
+            left: 0;
+        }
+
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #777;
+        }
+
+        .content {
+            flex: 1;
+            background-color: #f0f0f0;
+            overflow: auto;
+            padding: 20px;
+            margin-left: 0;
+            margin-top: 60px;
+            transition: margin-left 0.3s;
+        }
+
+        .content.shifted {
+            margin-left: 250px;
+        }
+
+        h1,
+        p {
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <img src="/static/images/imi_logo.png" alt="Logo">
+        <div class="profile-menu">
+            <span class="profile-icon" onclick="toggleDropdown()" style = "font-size: 1.4em;"> {{request.session.name}} 👤</span>
+            <div class="dropdown-menu" id="dropdown-menu">
+                <a href="#">Change Password</a>
+                <a href="#">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+        <a href="{% url 'products' %}">Products</a>
+        <a href="{% url 'order_history' %}">Orders</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="https://imitoolsindia.com/brochure/SMSBrochure.pdf" target="_blank" download="products.pdf">Product
+            Catalog</a>
+    </div>
+
+    <div class="content" id="content">
+        <!DOCTYPE html>
+        <html lang="en">
+
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>My Cart</title>
+            <style>
+                /* General Styles */
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #d3d3d3;
+                    display: flex;
+                    height: 100vh;
+                }
+
+                h1 {
+                    text-align: center;
+                    color: #333;
+                }
+
+                table {
+                    width: 90%;
+                    margin: 20px auto;
+                    border-collapse: collapse;
+                    background-color: #fff;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+                /* Minimize the size of the quantity input field */
+                table input[type="number"] {
+                    width: 100px;
+                    /* Adjust the width */
+                    text-align: center;
+                    /* Center-align the input */
+                    padding: 5px;
+                    /* Add some padding */
+                    font-size: 14px;
+                    /* Adjust font size */
+                    box-sizing: border-box;
+                    /* Ensure padding does not affect width */
+                }
+
+                th,
+                td {
+                    padding: 10px;
+                    text-align: center;
+                    border: 1px solid #ccc;
+                }
+
+                th {
+                    background-color: #555;
+                    color: white;
+                }
+
+                td {
+                    background-color: #f9f9f9;
+                }
+
+                button {
+                    background-color: #555;
+                    color: white;
+                    border: none;
+                    padding: 8px 15px;
+                    cursor: pointer;
+                    border-radius: 4px;
+                }
+
+                button:hover {
+                    background-color: #777;
+                }
+
+                /* Cart Total Section */
+                h3 {
+                    text-align: center;
+                    color: #333;
+                    margin-top: 20px;
+                }
+
+                /* Action Buttons */
+                form {
+                    display: inline-block;
+                }
+
+                .empty-cart {
+                    text-align: center;
+                    font-size: 16px;
+                    color: #777;
+                }
+
+                .content {
+                    flex: 1;
+                    background-color: #f0f0f0;
+                    overflow: auto;
+                    padding: 20px;
+                    margin-top: 10px;
+                    /* Adjusted to align below the navbar */
+                    transition: margin-left 0.3s;
+                }
+
+                .navbar {
+                    height: 60px;
+                    background-color: #fff;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0 20px;
+                    position: fixed;
+                    top: 0;
+                    width: 100%;
+                    z-index: 1000;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                }
+
+
+                .navbar img {
+                    height: 50px;
+                    /* Logo size */
+                    max-height: 100%;
+                    position: absolute;
+                    left: 50%;
+                    transform: translateX(-50%);
+                }
+
+                /* Center the button */
+                .checkout-btn-container {
+                    text-align: center;
+                    margin-top: 20px;
+                }
+            </style>
+        </head>
+
+        <body>
+            <div class="content">
+                <h1>My Cart</h1>
+                {% if cart_items %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Catalog Number</th>
+                            <th>Description</th>
+                            <th>IN_Stock</th>
+                            <th>Warranty</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in cart_items %}
+                        <tr>
+                            <td>{{ item.product.catalog_number }}</td>
+                            <td>{{ item.product.description }}</td>
+                            <td>{{ item.product.in_stock }}</td>
+                            <td>{{ item.product.warranty }}</td>
+                            <td>
+                                <form method="post" action="{% url 'update_cart' item.id %}" class="quantity-form">
+                                    {% csrf_token %}
+                                    <button type="button" onclick="changeQuantity(this, -1)">-</button>
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1"
+                                        oninput="updateQuantity(this)" class="quantity-input">
+                                    <button type="button" onclick="changeQuantity(this, 1)">+</button>
+                                    <input type="hidden" name="action" value="update">
+                                </form>
+                            </td>
+                            <td>₹{{ item.product.discounted_price|default:item.product.original_price }}</td>
+                            <td>₹{{ item.total_price }}</td>
+                            <td>
+                                <form method="post" action="{% url 'update_cart' item.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="remove">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" style="text-align: right; font-weight: bold;">Totals:</td>
+                            <td style="font-weight: bold;">{{ total_quantity }}</td> <!-- Total Quantity -->
+                            <td></td>
+                            <td style="font-weight: bold;">₹{{ total_price }}</td> <!-- Total Price -->
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="checkout-btn-container">
+                    <form action="mail" method="post" onsubmit="return validateCheckout()">
+                        {% csrf_token %}
+                        <button type="submit" id="checkout-btn">Proceed to Checkout</button>
+                    </form>
+                </div>
+                {% else %}
+                <p class="empty-cart">Your cart is empty.</p>
+                {% endif %}
+            </div>
+        </body>
+
+        </html>
+    </div>
+
+    <script>
+        function validateCheckout() {
+            let rows = document.querySelectorAll("tbody tr");
+            for (let row of rows) {
+                let inStock = parseInt(row.cells[2].textContent.trim());
+                let quantity = parseInt(row.querySelector(".quantity-input").value.trim());
+
+                if (quantity > inStock) {
+                    alert("Error: Some items exceed available stock. Please adjust the quantity.");
+                    return false;
+                }
+            }
+            return true;
+        }
+        
+        function changeQuantity(button, change) {
+            let input = button.parentElement.querySelector('.quantity-input');
+            let newValue = parseInt(input.value) + change;
+            if (newValue >= 1) {
+                input.value = newValue;
+                submitForm(input);
+            }
+        }
+
+        function updateQuantity(input) {
+            let value = parseInt(input.value);
+            if (value >= 1) {
+                submitForm(input);
+            }
+        }
+
+        function submitForm(input) {
+            let form = input.closest("form");
+            clearTimeout(input.timer); // Clear any previous timeout
+            input.timer = setTimeout(() => {
+                form.submit();
+            }, 500); // Auto-submit after 500ms delay
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const content = document.getElementById('content');
+            sidebar.classList.toggle('visible');
+            content.classList.toggle('shifted');
+        }
+
+        window.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggleButton = document.querySelector('.toggle-btn');
+            if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+                sidebar.classList.remove('visible');
+                document.getElementById('content').classList.remove('shifted');
+            }
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdown-menu');
+            dropdown.classList.toggle('visible');
+        }
+
+        window.addEventListener('click', function (event) {
+            const dropdown = document.getElementById('dropdown-menu');
+            const profileIcon = document.querySelector('.profile-icon');
+            if (!dropdown.contains(event.target) && !profileIcon.contains(event.target)) {
+                dropdown.classList.remove('visible');
+            }
+        });
+    </script>
+
+</body>
+
+</html>
